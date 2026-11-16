@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+fs.mkdirSync('dist/server',{recursive:true});fs.mkdirSync('dist/.openai',{recursive:true});
+let server=fs.readFileSync('server.mjs','utf8').replace("import {menus,defaults} from './data.mjs';",'');
+server=server.replaceAll("(await import('./data.mjs')).recommend",'recommend').replaceAll("(await import('./data.mjs')).levels",'levels');
+server=server.replace("import {seedDemo} from './demo.mjs';",'');
+const demo=fs.readFileSync('demo.mjs','utf8').replace("import {defaults,menus} from './data.mjs';",'').replace('export ','');
+const data=fs.readFileSync('data.mjs','utf8').replaceAll('export ','');
+const parts=['index.html','style.css','app.js'].map(p=>JSON.stringify(fs.readFileSync(p,'utf8')));
+parts.push(JSON.stringify(fs.readFileSync('assets/chacha.png').toString('base64')),JSON.stringify(fs.readFileSync('assets/app-icon.png').toString('base64')));
+fs.writeFileSync('dist/server/index.js',data+'\n'+demo+'\n'+server+'\nexport default createWorker('+parts.join(',')+');');
+fs.copyFileSync('.openai/hosting.json','dist/.openai/hosting.json');
+console.log('Built worker with Chacha and selected cloche/book app icon.');
